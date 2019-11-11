@@ -12,8 +12,8 @@ class Boot extends ReceiverTypes
     public function handleData($data, $db)
     {
         $_SESSION['mac'] = $data['mac'];
-        $_SESSION['seq'] = $data['seq'];
-        $_SESSION['position'] = $data['position'];
-        $_SESSION['press'] = $data['press'];
+        $_SESSION['seq'] = intval($data['seq']);
+        $_SESSION['position'] = intval($data['position']);
+        $_SESSION['press'] = intval($data['press']);
     }
 }

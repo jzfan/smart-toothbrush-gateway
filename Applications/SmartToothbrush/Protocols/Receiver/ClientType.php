@@ -2,6 +2,8 @@
 
 namespace Protocols\Receiver;
 
+use Protocols\Utils;
+
 class ClientType extends ReceiverTypes
 {
     public function getDecodeRule()
@@ -11,12 +13,32 @@ class ClientType extends ReceiverTypes
 
     public function handleData($data, $db)
     {
-        $db->update('hh_user_toothbrush')
+        if (!$this->shouldUpdate()) {
+            return false;
+        }
+        if ($this->update($data, $db)) {
+            return $this->replyOk(Utils::CLIENT_TYPE, $data['mac']);
+        }
+        $_SESSION['update_config'] = false;
+    }
+
+    protected function update($data, $db)
+    {
+        return $db->update('hh_user_toothbrush')
             ->cols([
                 'version' => $this->formatVersion($data['version']),
                 'model' => $data['model'],
                 'add_time' => time()
             ])->where("mac='" . $data['mac'] . "'")->query();
+    }
+
+    protected function shouldUpdate()
+    {
+        if (!hasSession(['update_config'])) {
+            $_SESSION['update_config'] = true;
+            return true;
+        }
+        return false;
     }
 
     protected function formatVersion($version)

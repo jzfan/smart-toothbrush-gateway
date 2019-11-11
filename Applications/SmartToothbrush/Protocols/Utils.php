@@ -20,13 +20,13 @@ class Utils
     /**
      * 发送类型消息
      */
-    const BOOT_CMD = 0x33; //引导⻚发送控制指令（服务器→⽛刷）
-    const SET_DATE = 0x35;     // 服务器下发⽇期指令
-    const SERVER_OK = 0x36;  //发给⽛刷硬件的OK指令
-    const SERVER_NG = 0x37;  //发给⽛刷硬件的NG指令
-    const CONTROL = 0x3A;  //服务器→MCU控制指令
-    const CHANGE_IP = 0x3E;  //服务器IP和端⼝更改 
-    const QUERY = 0x3F;  //服务器、mcu查询命令
+    const BOOT_CMD = '33'; //引导⻚发送控制指令（服务器→⽛刷）
+    const SET_DATE = '35';     // 服务器下发⽇期指令
+    const SERVER_OK = '36';  //发给⽛刷硬件的OK指令
+    const SERVER_NG = '37';  //发给⽛刷硬件的NG指令
+    const CONTROL = '3a';  //服务器→MCU控制指令
+    const CHANGE_IP = '3e';  //服务器IP和端⼝更改 
+    const QUERY = '3f';  //服务器、mcu查询命令
 
     //logger
     //

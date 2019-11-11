@@ -2,13 +2,13 @@
 
 namespace Protocols;
 
-use Protocols\PackageTypeFactory;
+use Protocols\PackageHandlerFactory;
 
 class Package
 {
     public static function input($buffer)
     {
-        //长度小于2，继续等待
+        //长度小于4，继续等待
         if (strlen($buffer) < 4) {
             return 0;
         }
@@ -35,8 +35,8 @@ class Package
     public static function decode($buffer)
     {
         $code = unpack('H2code', substr($buffer, 2, 1))['code'];
-        $type = PackageTypeFactory::getType($code);
-        return $type->getData($buffer);
+        $receiver = PackageHandlerFactory::getReceiver($code);
+        return $receiver->getData($buffer);
     }
 
 
@@ -47,17 +47,17 @@ class Package
      *
      * @return string 
      */
-    public static function encode($order)
+    public static function encode($arr)
     {
-        $str = 'aa01';
-        $cmd = '3a';
-        $length = '15';
-        $mac = '98D86379C8E8';
-        $mode = '030101';
-        $crc = '1234';
+        $seq = $arr['seq'] ?? '01';
+        $length = $arr['length'];
+        $data = $arr['data'] ?? '';
 
-        $high = pack('H*', $str . $cmd . $length);
-        $low = pack('H*', $mode . $crc);
-        return $high . $mac . $low;
+        $high = pack('H*', 'aa' . $seq . $arr['code'] . $length);
+        $low = pack('H*', $data . '1234');
+
+        var_export('aa' . $seq . $arr['code'] . $length . $arr['mac'] . $data . '1234' . "\n");
+
+        return $high . $arr['mac'] . $low;
     }
 }

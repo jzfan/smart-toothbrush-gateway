@@ -11,13 +11,7 @@ class ClientStatus extends ReceiverTypes
 
     public function handleData($data, $db)
     {
-        $db->insert('hh_toothbrush_run')
-            ->cols([
-                'mac' => $data['mac'],
-                'switch' => $data['switch'],
-                'seconds' => hexdec($data['runSeconds']),
-                'power' => hexdec($data['power']),
-                'add_time' => time()
-            ])->query();
+        $_SESSION['seconds'] = hexdec($data['runSeconds']);
+        $_SESSION['power'] = hexdec($data['power']);
     }
 }

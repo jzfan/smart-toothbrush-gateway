@@ -17,7 +17,8 @@
             "Protocols\\": "Applications/SmartToothbrush/Protocols"
         },
         "files": [
-            "Applications/SmartToothbrush/LoggerServer.php"
+            "Applications/SmartToothbrush/LoggerServer.php",
+            "Applications/SmartToothbrush/helper.php"
         ]
     }
 }

@@ -6,7 +6,7 @@ use Protocols\Utils;
 
 class PackageHandlerFactory
 {
-    const TYPES = [
+    const RECEIVERS = [
         Utils::RESULT => 'Result',
         Utils::BOOT_DATA => 'Boot',
         Utils::QUERY_DATE => 'QueryDate',
@@ -15,13 +15,48 @@ class PackageHandlerFactory
         Utils::CLIENT_STATUS => 'ClientStatus',
     ];
 
-    public static function getType($index)
+    const SENDERS = [
+        Utils::CONTROL => 'Control',
+        Utils::SERVER_OK => 'Ok'
+    ];
+
+    public static function getReceiver($index)
     {
-        if (!isset(self::TYPES[$index])) {
-            return new Fallback;
+        if (!isset(self::RECEIVERS[$index])) {
+            return new \Protocols\Receiver\Fallback;
         }
-        $class = self::TYPES[$index];
+        $class = self::RECEIVERS[$index];
         $class = '\\Protocols\\Receiver\\' . $class;
         return new $class;
+    }
+
+    public static function getSender($index)
+    {
+        if (!isset(self::SENDERS[$index])) {
+            return new \Protocols\Sender\Fallback;
+        }
+        $class = self::SENDERS[$index];
+        $class = '\\Protocols\\Sender\\' . $class;
+        return new $class;
+    }
+
+    public static function all($instance = false)
+    {
+        $arr = [];
+        foreach (self::RECEIVERS as $class) {
+            $class = '\\Protocols\\Receiver\\' . $class;
+            $arr[] = new $class;
+        }
+        foreach (self::SENDERS as $class) {
+            $class = '\\Protocols\\Sender\\' . $class;
+            $arr[] = new $class;
+        }
+        if ($instance !== false) {
+            $instance = '\\Protocols\\Contract\\' . $instance;
+            return array_filter($arr, function ($class) use ($instance) {
+                return $class instanceof $instance;
+            });
+        }
+        return $arr;
     }
 }

@@ -7,9 +7,8 @@
  */
 //declare(ticks=1);
 
-use \GatewayWorker\Lib\Gateway;
 use Protocols\Utils;
-use Protocols\CloseHandler;
+use \GatewayWorker\Lib\Gateway;
 use Protocols\PackageHandlerFactory;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
@@ -20,8 +19,6 @@ class Events
 
     public static function onWorkerStart($worker)
     {
-        $name = getenv('DB_NAME');
-        var_export($name);
         self::$db = new \Workerman\MySQL\Connection('127.0.0.1', '3306', getenv('DB_USERNAME'), getenv('DB_PASSWORD'), getenv('DB_NAME'));
     }
 
@@ -34,15 +31,17 @@ class Events
     {
         self::bindIfNot($client_id, $message['mac']);
         // echo "message received: " . bin2hex($message) . "\n";
-
-        $handler = PackageHandlerFactory::getType($message['code']);
-        $handler->handleData($message, self::$db);
-        // PackageHandler::handleMessage($client_id, $message, self::$db);
+        var_export('message type: ' . $message['code'] . "\n");
+        $receiver = PackageHandlerFactory::getReceiver($message['code']);
+        $receiver->handleData($message, self::$db);
     }
 
     public static function onClose($client_id)
     {
-        CloseHandler::handle($client_id, self::$db);
+        $handlers = PackageHandlerFactory::all('CloseHandler');
+        foreach ($handlers as $handler) {
+            $handler->handleClose($client_id, self::$db);
+        }
     }
 
     protected static function bindIfNot($cid, $mac)

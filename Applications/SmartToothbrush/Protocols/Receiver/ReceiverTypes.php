@@ -2,9 +2,11 @@
 
 namespace Protocols\Receiver;
 
+use Protocols\Utils;
+use Protocols\PackageHandlerFactory;
+
 abstract class ReceiverTypes
 {
-
     abstract public function getDecodeRule();
 
     abstract public function handleData($data, $db);
@@ -14,5 +16,12 @@ abstract class ReceiverTypes
         $data = unpack($this->getDecodeRule(), $buffer);
         $data['mac'] = substr($buffer, 4, 12);
         return $data;
+    }
+
+    protected function replyOk($cmd, $mac)
+    {
+        $ok = PackageHandlerFactory::getSender(Utils::SERVER_OK);
+        $ok->send($cmd, $mac);
+        echo 'reply ok : ' . $cmd . "\n";
     }
 }
