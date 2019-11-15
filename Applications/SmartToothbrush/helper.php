@@ -9,3 +9,14 @@ function hasSession($keys)
     }
     return true;
 }
+
+function dump($info, $arr = null)
+{
+    if ($arr === null) {
+        var_export($info . ' : ' . "\n");
+    }
+    if (is_array($arr)) {
+        $arr = json_encode($arr);
+    }
+    var_export($info . ' : ' . $arr . "\n");
+}

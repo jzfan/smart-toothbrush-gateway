@@ -14,7 +14,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Protocols\\": "Applications/SmartToothbrush/Protocols"
+            "Protocols\\": "Applications/SmartToothbrush/Protocols",
+            "Services\\": "Applications/SmartToothbrush/Services"
         },
         "files": [
             "Applications/SmartToothbrush/LoggerServer.php",
