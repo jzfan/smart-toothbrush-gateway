@@ -15,6 +15,5 @@ class Boot extends ReceiverTypes
         $_SESSION['seq'] = hexdec($data['seq']);
         $_SESSION['position'] = intval($data['position']);
         $_SESSION['press'] = intval($data['press']);
-        var_export('seq: ' . $_SESSION['seq'] . "\n");
     }
 }
