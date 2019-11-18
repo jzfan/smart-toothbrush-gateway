@@ -29,11 +29,12 @@ class Result extends ReceiverTypes
         $this->points = ToothbrushingService::getPoints($data['result']);
         $this->suid = $this->db->select('sub_user_id')->from('hh_user_toothbrush')
             ->where("mac='" . $data["mac"] . "'")
+            ->orderByDESC(['id'])
             ->single();
-        \dump('suid : ' . $this->suid);
         $this->updateOrCreateTotal();
 
         $this->last = $this->getLastDataToday();
+        // \dump('last : ' . json_encode($this->last));
 
         $active = $this->shouldBeActive() ? 1 : 0;
         $this->createResult($active);
@@ -44,6 +45,8 @@ class Result extends ReceiverTypes
         if (!$this->last) {
             return true;
         }
+        \dump('last points: ' . $this->last['points']);
+        \dump('this points: ' . $this->points);
         if (!$this->isIn6Hours() && $this->countToday() < 2) {
             return true;
         }
@@ -73,7 +76,7 @@ class Result extends ReceiverTypes
         return $this->db->select('*')->from('hh_toothbrushing_result')
             ->where("mac='" . $this->mac . "'")
             ->where("add_time > $today_begin ")
-            ->orderByDESC(['id'])
+            ->orderByDesc(['id'])
             ->row();
     }
 
@@ -91,7 +94,7 @@ class Result extends ReceiverTypes
 
     protected function createResult($active)
     {
-        $insert = $this->db->insert('hh_toothbrushing_result')
+        $this->db->insert('hh_toothbrushing_result')
             ->cols([
                 'active' => $active,
                 'result' => $this->result,
@@ -100,7 +103,8 @@ class Result extends ReceiverTypes
                 'sub_user_id' => $this->suid,
                 'add_time' => time()
             ])->query();
-        if ($insert && $active === 1) {
+        \dump('active : ' . $active);
+        if ($active === 1 && isset($this->last['id'])) {
             return $this->db->update('hh_toothbrushing_result')
                 ->cols([
                     'active' => 0
