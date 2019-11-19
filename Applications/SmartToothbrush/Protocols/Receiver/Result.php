@@ -127,6 +127,7 @@ class Result extends ReceiverTypes
                     'count' => 1,
                     'sub_user_id' => $this->suid,
                     'add_time' => time(),
+                    'update_time' => time(),
                     'mac' => $this->mac
                 ])->query();
             return;

@@ -51,8 +51,8 @@ class ToothbrushingService
         $points = $seconds = [];
         foreach ($locations as  $location) {
             $locationResult = \str_split($location, 2); // [00, 01, 00] [seconds, num, void]
-            $seconds[] = intval($locationResult[0]);
-            $points[] = intval($locationResult[0]) > self::SECONDS ? self::POINTS_40[hexdec($locationResult[1])] : 0;
+            $seconds[] = hexdec($locationResult[0]);
+            $points[] = hexdec($locationResult[0]) > self::SECONDS ? self::POINTS_40[hexdec($locationResult[1])] : 0;
         }
         self::$totalTime = array_sum($seconds);
         return array_sum($points);
