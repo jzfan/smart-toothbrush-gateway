@@ -21,6 +21,7 @@ class Package
         //返回包长
         if ($unpack_data['code'] === Utils::RESULT) {
             return $unpack_data['length'] + 22;
+            // return $unpack_data['length'] + 28;
         }
         return $unpack_data['length'] + 6;
     }

@@ -31,13 +31,14 @@ class Result extends ReceiverTypes
             ->where("mac='" . $data["mac"] . "'")
             ->orderByDESC(['id'])
             ->single();
-        $this->updateOrCreateTotal();
 
-        $this->last = $this->getLastDataToday();
-        // \dump('last : ' . json_encode($this->last));
+        if ($this->suid) {
+            $this->updateOrCreateTotal();
 
-        $active = $this->shouldBeActive() ? 1 : 0;
-        $this->createResult($active);
+            $this->last = $this->getLastDataToday();
+            $active = $this->shouldBeActive() ? 1 : 0;
+            $this->createResult($active);
+        }
     }
 
     protected function shouldBeActive()
@@ -45,8 +46,6 @@ class Result extends ReceiverTypes
         if (!$this->last) {
             return true;
         }
-        \dump('last points: ' . $this->last['points']);
-        \dump('this points: ' . $this->points);
         if (!$this->isIn6Hours() && $this->countToday() < 2) {
             return true;
         }
@@ -119,7 +118,6 @@ class Result extends ReceiverTypes
             ->from('hh_toothbrushing_result_total')
             ->where("mac='" . $this->mac . "' and sub_user_id=" . $this->suid)
             ->row();
-        // \dump('row : ', $row);
         if (empty($row)) {
             $this->db->insert('hh_toothbrushing_result_total')
                 ->cols([
