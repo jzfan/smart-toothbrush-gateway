@@ -38,10 +38,10 @@ class Events
 
     public static function onClose($client_id)
     {
-        $handlers = PackageHandlerFactory::all('CloseHandler');
-        foreach ($handlers as $handler) {
-            $handler->handleClose($client_id, self::$db);
-        }
+        // $handlers = PackageHandlerFactory::all('CloseHandler');
+        // foreach ($handlers as $handler) {
+        //     $handler->handleClose($client_id, self::$db);
+        // }
     }
 
     protected static function bindIfNot($cid, $mac)

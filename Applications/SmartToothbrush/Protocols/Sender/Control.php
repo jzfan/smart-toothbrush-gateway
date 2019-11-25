@@ -14,7 +14,7 @@ class Control extends SenderTypes
         return '16';
     }
 
-    public function data($message)
+    public function data()
     {
         return '050101';
     }

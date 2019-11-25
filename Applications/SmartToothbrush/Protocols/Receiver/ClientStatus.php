@@ -2,6 +2,8 @@
 
 namespace Protocols\Receiver;
 
+use Protocols\Utils;
+
 class ClientStatus extends ReceiverTypes
 {
     public function getDecodeRule()
@@ -13,5 +15,6 @@ class ClientStatus extends ReceiverTypes
     {
         $_SESSION['seconds'] = hexdec($data['runSeconds']);
         $_SESSION['power'] = hexdec($data['power']);
+        $this->replyOk(Utils::CLIENT_STATUS, $data['mac']);
     }
 }

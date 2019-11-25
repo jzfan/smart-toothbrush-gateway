@@ -51,14 +51,9 @@ class Package
     public static function encode($arr)
     {
         $seq = $arr['seq'] ?? '01';
-        $length = $arr['length'];
         $data = $arr['data'] ?? '';
 
-        $high = pack('H*', 'aa' . $seq . $arr['code'] . $length);
-        $low = pack('H*', $data . '1234');
-
-        var_export('aa' . $seq . $arr['code'] . $length . $arr['mac'] . $data . '1234' . "\n");
-
-        return $high . $arr['mac'] . $low;
+        $msg = 'aa' . $seq . $arr['code'] . $arr['length'] . $arr['mac'] . $data;
+        return pack('H*', $msg . crc16($msg));
     }
 }

@@ -2,6 +2,8 @@
 
 namespace Protocols\Receiver;
 
+use Protocols\Utils;
+
 class QueryDate extends ReceiverTypes
 {
     public function getDecodeRule()
@@ -10,5 +12,8 @@ class QueryDate extends ReceiverTypes
     }
 
     public function handleData($data, $db)
-    { }
+    {
+        $sender = PackageHandlerFactory::getSender(Utils::SET_DATE);
+        $sender->send($data['mac']);
+    }
 }
