@@ -53,7 +53,8 @@ class Package
         $seq = $arr['seq'] ?? '01';
         $data = $arr['data'] ?? '';
 
-        $msg = 'aa' . $seq . $arr['code'] . $arr['length'] . $arr['mac'] . $data;
+        $msg = 'aa' . $seq . $arr['code'] . $arr['length'] . unpack('H*', $arr['mac'])[1] . $data;
         return pack('H*', $msg . crc16($msg));
     }
+
 }
