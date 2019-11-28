@@ -27,7 +27,8 @@ class SetDate extends SenderTypes
             'code' => $this->cmd(),
             'length' => $this->length(),
             'mac' => $mac,
-            'data' => $this->msg()
+            'data' => $this->msg(),
+            'seq' => $this->getSeq($this->cmd())
         ];
         $cid = Gateway::getClientIdByUid($mac)[0];
         Gateway::sendToClient($cid, $data);

@@ -19,7 +19,7 @@ class Events
 
     public static function onWorkerStart($worker)
     {
-        self::$db = new \Workerman\MySQL\Connection('127.0.0.1', '3306', getenv('DB_USERNAME'), getenv('DB_PASSWORD'), getenv('DB_NAME'));
+        self::$db = new \Workerman\MySQL\Connection(getenv('DB_HOST'), '3306', getenv('DB_USERNAME'), getenv('DB_PASSWORD'), getenv('DB_NAME'));
     }
 
     public static function onConnect($client_id)
