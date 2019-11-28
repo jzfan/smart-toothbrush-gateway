@@ -14,7 +14,7 @@ class ClientConfig extends ReceiverTypes
     public function handleData($data, $db)
     {
         if ($this->update($data, $db)) {
-            return $this->replyOk(Utils::CLIENT_CONFIG, $data['mac']);
+            return $this->replyOk($data['mac'], Utils::CLIENT_CONFIG);
         }
     }
 

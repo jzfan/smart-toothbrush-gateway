@@ -2,6 +2,7 @@
 
 namespace Protocols\Receiver;
 
+use GatewayWorker\Lib\Gateway;
 use Protocols\Utils;
 
 class ClientStatus extends ReceiverTypes
@@ -15,6 +16,18 @@ class ClientStatus extends ReceiverTypes
     {
         $_SESSION['seconds'] = hexdec($data['runSeconds']);
         $_SESSION['power'] = hexdec($data['power']);
-        $this->replyOk(Utils::CLIENT_STATUS, $data['mac']);
+
+        $this->replyOk($data['mac'], Utils::CLIENT_STATUS);
+
+        if ($data['switch'] == 0) {
+            \dump('close on client switch', $data['switch']);
+            $this->closeConnect($data['mac']);
+        }
+    }
+
+    protected function closeConnect($mac)
+    {
+        $cid = Gateway::getClientIdByUid($mac)[0];
+        Gateway::closeClient($cid);
     }
 }

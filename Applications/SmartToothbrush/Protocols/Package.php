@@ -54,6 +54,11 @@ class Package
         $data = $arr['data'] ?? '';
 
         $msg = 'aa' . $seq . $arr['code'] . $arr['length'] . $arr['mac'] . $data;
+
+        if ($arr['code'] != '36') {
+            \dump('send message' . $arr['code'], $msg);
+        }
+
         return pack('H*', $msg . crc16($msg));
     }
 }

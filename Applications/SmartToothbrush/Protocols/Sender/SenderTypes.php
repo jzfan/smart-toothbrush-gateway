@@ -4,5 +4,5 @@ namespace Protocols\Sender;
 
 abstract class SenderTypes
 {
-    abstract public function send($data, $mac);
+    abstract public function send($mac, $data);
 }

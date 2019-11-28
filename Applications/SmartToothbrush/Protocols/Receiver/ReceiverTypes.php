@@ -18,7 +18,7 @@ abstract class ReceiverTypes
         return $data;
     }
 
-    protected function replyOk($cmd, $mac)
+    protected function replyOk($mac, $cmd)
     {
         $ok = PackageHandlerFactory::getSender(Utils::SERVER_OK);
         $ok->send($cmd, $mac);

@@ -7,7 +7,7 @@ use GatewayWorker\Lib\Gateway;
 
 class Ok extends SenderTypes
 {
-    public function send($cmd, $mac)
+    public function send($mac, $cmd)
     {
         return Gateway::sendToCurrentClient([
             'seq' => $cmd,

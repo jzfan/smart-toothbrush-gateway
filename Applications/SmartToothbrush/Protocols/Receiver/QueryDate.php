@@ -2,6 +2,7 @@
 
 namespace Protocols\Receiver;
 
+use Protocols\PackageHandlerFactory;
 use Protocols\Utils;
 
 class QueryDate extends ReceiverTypes

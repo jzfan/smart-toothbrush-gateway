@@ -17,7 +17,8 @@ class PackageHandlerFactory
 
     const SENDERS = [
         Utils::CONTROL => 'Control',
-        Utils::SERVER_OK => 'Ok'
+        Utils::SERVER_OK => 'Ok',
+        Utils::SET_DATE => 'SetDate'
     ];
 
     public static function getReceiver($index)

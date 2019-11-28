@@ -17,7 +17,7 @@ class ClientType extends ReceiverTypes
             return false;
         }
         if ($this->update($data, $db)) {
-            return $this->replyOk(Utils::CLIENT_TYPE, $data['mac']);
+            return $this->replyOk($data['mac'], Utils::CLIENT_TYPE);
         }
         $_SESSION['update_config'] = false;
     }
