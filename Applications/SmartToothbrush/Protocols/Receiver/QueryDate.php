@@ -14,7 +14,7 @@ class QueryDate extends ReceiverTypes
 
     public function handleData($data, $db)
     {
-        $sender = PackageHandlerFactory::getSender(Utils::SET_DATE);
-        $sender->send($data['mac']);
+        $setter = PackageHandlerFactory::getSender(Utils::SET_DATE);
+        $setter->send($data['mac'], null);
     }
 }

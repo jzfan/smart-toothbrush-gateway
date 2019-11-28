@@ -50,14 +50,14 @@ class Package
      */
     public static function encode($arr)
     {
-        $seq = $arr['seq'] ?? '01';
-        $data = $arr['data'] ?? '';
-
-        $msg = 'aa' . $seq . $arr['code'] . $arr['length'] . unpack('H*', $arr['mac'])[1] . $data;
-
-        if ($arr['code'] != '36') {
-            \dump('send message ' . $arr['code'], $msg);
+        if (!isset($arr['data'])) {
+            $arr['data'] = '';
         }
+        $msg = 'aa' . $arr['seq'] . $arr['code'] . $arr['length'] . unpack('H*', $arr['mac'])[1] . $arr['data'];
+
+        // if ($arr['code'] != '36') {
+        \dump('send message : ' . $arr['code'], $msg);
+        // }
 
         return pack('H*', $msg . crc16($msg));
     }

@@ -16,7 +16,7 @@ class Control extends SenderTypes
 
     public function data()
     {
-        return '050101';
+        // return '050101';
     }
 
     public function send($data, $mac)

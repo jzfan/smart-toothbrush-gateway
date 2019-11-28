@@ -25,7 +25,7 @@ class SetDate extends SenderTypes
     {
         $data = [
             'code' => $this->cmd(),
-            'lenght' => $this->length(),
+            'length' => $this->length(),
             'mac' => $mac,
             'data' => $this->msg()
         ];

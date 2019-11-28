@@ -21,7 +21,7 @@ abstract class ReceiverTypes
     protected function replyOk($mac, $cmd)
     {
         $ok = PackageHandlerFactory::getSender(Utils::SERVER_OK);
-        $ok->send($cmd, $mac);
+        $ok->send($mac, $cmd);
         echo 'reply ok : ' . $cmd . "\n";
     }
 }
