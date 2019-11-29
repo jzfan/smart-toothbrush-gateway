@@ -4,7 +4,7 @@ namespace Protocols\Receiver;
 
 use Services\ToothbrushingService;
 
-class Result extends ReceiverTypes
+class Result2 extends ReceiverTypes
 {
     protected $last;
     protected $points;
@@ -21,6 +21,7 @@ class Result extends ReceiverTypes
 
     public function handleData($data, $db)
     {
+        dump('result', $data);
         if ($data['seq'] > 0) {
             return;
         }

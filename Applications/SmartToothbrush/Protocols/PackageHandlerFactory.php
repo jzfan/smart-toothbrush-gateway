@@ -7,7 +7,7 @@ use Protocols\Utils;
 class PackageHandlerFactory
 {
     const RECEIVERS = [
-        Utils::RESULT => 'Result',
+        Utils::RESULT => 'Result2',
         Utils::BOOT_DATA => 'Boot',
         Utils::QUERY_DATE => 'QueryDate',
         Utils::CLIENT_TYPE => 'ClientType',

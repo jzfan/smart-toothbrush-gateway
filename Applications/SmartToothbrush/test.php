@@ -3,6 +3,9 @@
 use Protocols\PackageHandlerFactory;
 use Protocols\Utils;
 use Protocols\Package;
+use Protocols\Receiver\Result2;
+
+require_once __DIR__ . '/../../vendor/autoload.php';
 
 function testCrc()
 {
@@ -18,7 +21,7 @@ function testEncodeMac()
     echo PHP_EOL;
 }
 
-testEncodeMac();
+// testEncodeMac();
 
 function testEncode()
 {
@@ -33,3 +36,11 @@ function testEncode()
 }
 
 // testEncode();
+
+function testResult2()
+{
+    $r = new Result2();
+    echo $r->getDecodeRule();
+}
+
+testResult2();
