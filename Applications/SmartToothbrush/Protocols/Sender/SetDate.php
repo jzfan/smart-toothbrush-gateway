@@ -13,7 +13,7 @@ class SetDate extends SenderTypes
 
     public function length()
     {
-        return '14';
+        return '18';
     }
 
     public function msg()
