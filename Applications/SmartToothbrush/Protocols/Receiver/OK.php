@@ -2,6 +2,8 @@
 
 namespace Protocols\Receiver;
 
+use Protocols\PackageHandlerFactory;
+
 class Fallback extends ReceiverTypes
 {
     public function getDecodeRule()
@@ -11,11 +13,11 @@ class Fallback extends ReceiverTypes
 
     public function handleData($data, $db)
     {
-        $type = PackageTypeFactory::getType($data['cmd']);
+        // $type = PackageHandlerFactory::getReceiver($data['cmd']);
 
-        if ($data['code'] == '06') {
-            var_export($data);
-        }
-        var_export($data['code']);
+        // if ($data['code'] == '06') {
+        //     var_export($data);
+        // }
+        // var_export($data['code']);
     }
 }
