@@ -23,7 +23,7 @@ class PackageHandlerFactory
 
     public static function getReceiver($index)
     {
-        if (!isset(self::RECEIVERS[$index])) {
+if (self::RECEIVERS[$index] === null) {
             return new \Protocols\Receiver\Fallback;
         }
         $class = self::RECEIVERS[$index];
@@ -33,7 +33,7 @@ class PackageHandlerFactory
 
     public static function getSender($index)
     {
-        if (!isset(self::SENDERS[$index])) {
+        if (self::SENDERS[$index] === null) {
             return new \Protocols\Sender\Fallback;
         }
         $class = self::SENDERS[$index];
