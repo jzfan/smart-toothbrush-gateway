@@ -102,7 +102,7 @@ class Result extends ReceiverTypes
                 'sub_user_id' => $this->suid,
                 'add_time' => time()
             ])->query();
-        \dump('active : ' . $active);
+        // \dump('active : ' . $active);
         if ($active === 1 && isset($this->last['id'])) {
             return $this->db->update('hh_toothbrushing_result')
                 ->cols([
