@@ -2,9 +2,7 @@
 
 namespace Protocols\Receiver;
 
-use Protocols\PackageHandlerFactory;
-
-class Fallback extends ReceiverTypes
+class Ok extends ReceiverTypes
 {
     public function getDecodeRule()
     {

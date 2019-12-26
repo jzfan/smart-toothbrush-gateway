@@ -13,6 +13,7 @@ class PackageHandlerFactory
         Utils::CLIENT_TYPE => 'ClientType',
         Utils::CLIENT_CONFIG => 'ClientConfig',
         Utils::CLIENT_STATUS => 'ClientStatus',
+        Utils::CLIENT_OK => 'Ok',
     ];
 
     const SENDERS = [
@@ -23,9 +24,9 @@ class PackageHandlerFactory
 
     public static function getReceiver($index)
     {
-if (self::RECEIVERS[$index] === null) {
-            return new \Protocols\Receiver\Fallback;
-        }
+        // if (!isset(self::RECEIVERS[$index])) {
+        //     return new \Protocols\Receiver\Fallback;
+        // }
         $class = self::RECEIVERS[$index];
         $class = '\\Protocols\\Receiver\\' . $class;
         return new $class;
@@ -33,9 +34,6 @@ if (self::RECEIVERS[$index] === null) {
 
     public static function getSender($index)
     {
-        if (self::SENDERS[$index] === null) {
-            return new \Protocols\Sender\Fallback;
-        }
         $class = self::SENDERS[$index];
         $class = '\\Protocols\\Sender\\' . $class;
         return new $class;
