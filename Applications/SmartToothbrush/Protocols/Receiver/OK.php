@@ -2,7 +2,7 @@
 
 namespace Protocols\Receiver;
 
-class Ok extends ReceiverTypes
+class OK extends ReceiverTypes
 {
     public function getDecodeRule()
     {

@@ -19,10 +19,12 @@ class ClientStatus extends ReceiverTypes
 
         $this->replyOk($data['mac'], Utils::CLIENT_STATUS);
 
-        // if ($data['switch'] == 0) {
-        //     \dump('close on client switch', $data['switch']);
-        //     $this->closeConnect($data['mac']);
-        // }
+        if ($data['switch'] == 0) {
+            $_SESSION['state'] = 0;
+
+            // \dump('close on client switch', $data['switch']);
+            // $this->closeConnect($data['mac']);
+        }
     }
 
     protected function closeConnect($mac)

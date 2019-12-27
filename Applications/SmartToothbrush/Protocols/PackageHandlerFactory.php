@@ -13,7 +13,7 @@ class PackageHandlerFactory
         Utils::CLIENT_TYPE => 'ClientType',
         Utils::CLIENT_CONFIG => 'ClientConfig',
         Utils::CLIENT_STATUS => 'ClientStatus',
-        Utils::CLIENT_OK => 'Ok',
+        Utils::CLIENT_OK => 'OK',
     ];
 
     const SENDERS = [

@@ -21,10 +21,16 @@ class Result2 extends ReceiverTypes
 
     public function handleData($data, $db)
     {
-        dump('result', $data);
-        if ($data['seq'] > 0) {
-            return;
-        }
+        \dump('result seq', $data['seq']);
+        // if (!isset($_SESSION['num'])) {
+        //     $_SESSION['num'] = 1;
+        // } else {
+        //     $_SESSION['num'] = $_SESSION['num'] + 1;
+        // }
+
+        // if ($_SESSION['num']  < 3) {
+        //     return;
+        // }
         $this->db = $db;
         $this->mac = $data['mac'];
         $this->result = $data['result'];
@@ -35,7 +41,9 @@ class Result2 extends ReceiverTypes
             ->orderByDESC(['id'])
             ->single();
 
+        dump('result', $data);
         if ($this->suid) {
+            dump('suid', $this->suid);
             $this->updateOrCreateTotal();
 
             $this->last = $this->getLastDataToday();
