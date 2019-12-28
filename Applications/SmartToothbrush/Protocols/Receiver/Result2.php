@@ -16,7 +16,7 @@ class Result2 extends ReceiverTypes
 
     public function getDecodeRule()
     {
-        return 'H2header/H2seq/H2code/H2length/H24mac/H12date/H*result';
+        return 'H2header/H2seq/H2code/H2length/H24mac/H12date/H96result';
     }
 
     public function handleData($data, $db)
@@ -34,7 +34,8 @@ class Result2 extends ReceiverTypes
         $this->db = $db;
         $this->mac = $data['mac'];
         $this->result = $data['result'];
-        $this->time = strtotime('ymdHis', $data['date']);
+        $dt = \str_split($data['date'], 2);
+        $this->time = strtotime("$dt[0]-$dt[1]-$dt[2] $dt[3]:$dt[4]:$dt[5]");
         $this->points = ToothbrushingService::getPoints($data['result']);
         $this->suid = $this->db->select('sub_user_id')->from('hh_user_toothbrush')
             ->where("mac='" . $data["mac"] . "'")
