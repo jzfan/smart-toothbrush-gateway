@@ -10,7 +10,8 @@
         "workerman/gateway-worker": ">=3.0.0",
         "monolog/monolog": "^1.25",
         "vlucas/phpdotenv": "^3.6",
-        "workerman/mysql": "^1.0"
+        "workerman/mysql": "^1.0",
+        "workerman/http-client": "^0.1.4"
     },
     "autoload": {
         "psr-4": {

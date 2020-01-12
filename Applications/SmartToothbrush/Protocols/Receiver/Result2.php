@@ -2,6 +2,7 @@
 
 namespace Protocols\Receiver;
 
+use Workerman\Http\Client;
 use Services\ToothbrushingService;
 
 class Result2 extends ReceiverTypes
@@ -21,22 +22,16 @@ class Result2 extends ReceiverTypes
 
     public function handleData($data, $db)
     {
-        \dump('result seq', $data['seq']);
-        // if (!isset($_SESSION['num'])) {
-        //     $_SESSION['num'] = 1;
-        // } else {
-        //     $_SESSION['num'] = $_SESSION['num'] + 1;
-        // }
-
-        // if ($_SESSION['num']  < 3) {
-        //     return;
-        // }
+        if ($data['seq']  > 1) {
+            return;
+        }
         $this->db = $db;
         $this->mac = $data['mac'];
         $this->result = $data['result'];
         $dt = \str_split($data['date'], 2);
         $this->time = strtotime("$dt[0]-$dt[1]-$dt[2] $dt[3]:$dt[4]:$dt[5]");
         $this->points = ToothbrushingService::getPoints($data['result']);
+
         $this->suid = $this->db->select('sub_user_id')->from('hh_user_toothbrush')
             ->where("mac='" . $data["mac"] . "'")
             ->orderByDESC(['id'])
@@ -44,12 +39,13 @@ class Result2 extends ReceiverTypes
 
         dump('result', $data);
         if ($this->suid) {
-            dump('suid', $this->suid);
+            // dump('suid', $this->suid);
             $this->updateOrCreateTotal();
 
             $this->last = $this->getLastDataToday();
             $active = $this->shouldBeActive() ? 1 : 0;
-            $this->createResult($active);
+            $id = $this->createResult($active);
+            $this->push($id);
         }
     }
 
@@ -91,21 +87,21 @@ class Result2 extends ReceiverTypes
             ->row();
     }
 
-    protected function updateResult()
-    {
-        return $this->db->update('hh_toothbrushing_result')
-            ->cols([
-                'result' => $this->result,
-                'mac' => $this->mac,
-                'points' => $this->points,
-                'add_time' => $this->time
-            ])->where('id=' . $this->last['id'])
-            ->query();
-    }
+    // protected function updateResult()
+    // {
+    //     return $this->db->update('hh_toothbrushing_result')
+    //         ->cols([
+    //             'result' => $this->result,
+    //             'mac' => $this->mac,
+    //             'points' => $this->points,
+    //             'add_time' => $this->time
+    //         ])->where('id=' . $this->last['id'])
+    //         ->query();
+    // }
 
     protected function createResult($active)
     {
-        $this->db->insert('hh_toothbrushing_result')
+        $id = $this->db->insert('hh_toothbrushing_result')
             ->cols([
                 'active' => $active,
                 'result' => $this->result,
@@ -114,7 +110,7 @@ class Result2 extends ReceiverTypes
                 'sub_user_id' => $this->suid,
                 'add_time' => $this->time
             ])->query();
-        \dump('active : ' . $active);
+        // \dump('active : ' . $active);
         if ($active === 1 && isset($this->last['id'])) {
             return $this->db->update('hh_toothbrushing_result')
                 ->cols([
@@ -122,6 +118,7 @@ class Result2 extends ReceiverTypes
                 ])->where('id=' . $this->last['id'])
                 ->query();
         }
+        return $id;
     }
 
     protected function updateOrCreateTotal()
@@ -149,5 +146,20 @@ class Result2 extends ReceiverTypes
                 'update_time' => $this->time
             ])->where("mac='" . $this->mac . "'")
             ->query();
+    }
+
+    protected function push($id)
+    {
+        $http = new Client();
+        $http->post(getenv('PUSH_HOST') . '/pusher/points/push', [
+            'id' => $id,
+            'mac' => $this->mac,
+            'points' => $this->points
+        ], function ($response) {
+            var_dump($response->getStatusCode());
+            echo $response->getBody();
+        }, function ($exception) {
+            echo $exception;
+        });
     }
 }
