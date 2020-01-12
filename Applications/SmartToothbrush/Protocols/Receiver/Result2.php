@@ -25,6 +25,12 @@ class Result2 extends ReceiverTypes
         if ($data['seq']  > 1) {
             return;
         }
+        if (isset($_SESSION['result_date']) && $data['date'] - $_SESSION['result_date'] < 10) {
+            return;
+        } else {
+            $_SESSION['result_date'] = $data['date'];
+        }
+
         $this->db = $db;
         $this->mac = $data['mac'];
         $this->result = $data['result'];
@@ -37,7 +43,7 @@ class Result2 extends ReceiverTypes
             ->orderByDESC(['id'])
             ->single();
 
-        dump('result', $data);
+        // dump('result', $data);
         if ($this->suid) {
             // dump('suid', $this->suid);
             $this->updateOrCreateTotal();
