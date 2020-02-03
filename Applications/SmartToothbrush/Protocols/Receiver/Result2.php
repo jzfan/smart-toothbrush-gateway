@@ -22,36 +22,39 @@ class Result2 extends ReceiverTypes
 
     public function handleData($data, $db)
     {
-        if ($data['seq']  > 1) {
-            return;
-        }
-        if (isset($_SESSION['result_date']) && $data['date'] - $_SESSION['result_date'] < 10) {
-            return;
-        } else {
-            $_SESSION['result_date'] = $data['date'];
-        }
+        try {
+            $file = fopen(__DIR__ . '/lock.txt', 'w+');
+            if (!flock($file, LOCK_EX | LOCK_NB)) {
+                return;
+            }
 
-        $this->db = $db;
-        $this->mac = $data['mac'];
-        $this->result = $data['result'];
-        $dt = \str_split($data['date'], 2);
-        $this->time = strtotime("$dt[0]-$dt[1]-$dt[2] $dt[3]:$dt[4]:$dt[5]");
-        $this->points = ToothbrushingService::getPoints($data['result']);
+            $this->db = $db;
+            $this->mac = $data['mac'];
+            $this->result = $data['result'];
+            $dt = \str_split($data['date'], 2);
+            $this->time = strtotime("$dt[0]-$dt[1]-$dt[2] $dt[3]:$dt[4]:$dt[5]");
+            $this->points = ToothbrushingService::getPoints($data['result']);
 
-        $this->suid = $this->db->select('sub_user_id')->from('hh_user_toothbrush')
-            ->where("mac='" . $data["mac"] . "'")
-            ->orderByDESC(['id'])
-            ->single();
+            $this->suid = $this->db->select('sub_user_id')->from('hh_user_toothbrush')
+                ->where("mac='" . $data["mac"] . "'")
+                ->orderByDESC(['id'])
+                ->single();
 
-        // dump('result', $data);
-        if ($this->suid) {
-            // dump('suid', $this->suid);
-            $this->updateOrCreateTotal();
+            // dump('result', $data);
+            if ($this->suid) {
+                // dump('suid', $this->suid);
+                $this->updateOrCreateTotal();
 
-            $this->last = $this->getLastDataToday();
-            $active = $this->shouldBeActive() ? 1 : 0;
-            $id = $this->createResult($active);
-            $this->push($id);
+                $this->last = $this->getLastDataToday();
+                $active = $this->shouldBeActive() ? 1 : 0;
+                $id = $this->createResult($active);
+                $this->push($id);
+            }
+        } catch (\Throwable $th) {
+            throw $th;
+        } finally {
+            flock($file, LOCK_UN); //解锁
+            fclose($file);
         }
     }
 
