@@ -20,41 +20,49 @@ class Result2 extends ReceiverTypes
         return 'H2header/H2seq/H2code/H2length/H24mac/H12date/H96result';
     }
 
+    public function initData($data, $db)
+    {
+        $this->db = $db;
+        $this->mac = $data['mac'];
+        $this->result = $data['result'];
+        $dt = \str_split($data['date'], 2);
+        $this->time = strtotime("$dt[0]-$dt[1]-$dt[2] $dt[3]:$dt[4]:$dt[5]");
+        $this->points = ToothbrushingService::getPoints($data['result']);
+
+        $this->suid = $db->select('sub_user_id')->from('hh_user_toothbrush')
+            ->where("mac='" . $data["mac"] . "'")
+            ->orderByDESC(['id'])
+            ->single();
+    }
+
+    public function exists()
+    {
+        \usleep(\rand(0, 1000000));
+
+        $last = $this->db->select('add_time')->from('hh_toothbrushing_result')
+            ->where("mac='" . $this->mac . "'")
+            ->orderByDESC(['add_time'])
+            ->single();
+
+        return (time() - $last) < 10;
+    }
+
     public function handleData($data, $db)
     {
-        try {
-            $file = fopen(__DIR__ . '/lock.txt', 'w+');
-            if (!flock($file, LOCK_EX | LOCK_NB)) {
-                return;
-            }
+        $this->initData($data, $db);
 
-            $this->db = $db;
-            $this->mac = $data['mac'];
-            $this->result = $data['result'];
-            $dt = \str_split($data['date'], 2);
-            $this->time = strtotime("$dt[0]-$dt[1]-$dt[2] $dt[3]:$dt[4]:$dt[5]");
-            $this->points = ToothbrushingService::getPoints($data['result']);
+        if ($this->exists()) {
+            return false;
+        }
 
-            $this->suid = $this->db->select('sub_user_id')->from('hh_user_toothbrush')
-                ->where("mac='" . $data["mac"] . "'")
-                ->orderByDESC(['id'])
-                ->single();
+        if ($this->suid) {
+            // dump('suid', $this->suid);
+            $this->updateOrCreateTotal();
 
-            // dump('result', $data);
-            if ($this->suid) {
-                // dump('suid', $this->suid);
-                $this->updateOrCreateTotal();
-
-                $this->last = $this->getLastDataToday();
-                $active = $this->shouldBeActive() ? 1 : 0;
-                $id = $this->createResult($active);
-                $this->push($id);
-            }
-        } catch (\Throwable $th) {
-            throw $th;
-        } finally {
-            flock($file, LOCK_UN); //解锁
-            fclose($file);
+            $this->last = $this->getLastDataToday();
+            $active = $this->shouldBeActive() ? 1 : 0;
+            $id = $this->createResult($active);
+            $this->push($id);
         }
     }
 
