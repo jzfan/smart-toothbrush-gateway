@@ -14,6 +14,8 @@ class Result2 extends ReceiverTypes
     protected $suid;
     protected $result;
     protected $time;
+    protected $active;
+    protected $isInShortTime;
 
     public function getDecodeRule()
     {
@@ -60,10 +62,22 @@ class Result2 extends ReceiverTypes
             $this->updateOrCreateTotal();
 
             $this->last = $this->getLastDataToday();
-            $active = $this->shouldBeActive() ? 1 : 0;
-            $id = $this->createResult($active);
+            $this->isInShortTime = $this->isIn6Hours();
+
+            $this->active = $this->shouldBeActive() ? 1 : 0;
+            $id = $this->createResult();
+
+            if ($this->shouldInactiveLast()) {
+                $this->inactiveLast();
+            }
+
             $this->push($id);
         }
+    }
+
+    protected function shouldInactiveLast()
+    {
+        return $this->active && !!$this->last && $this->isInShortTime;
     }
 
     protected function shouldBeActive()
@@ -71,10 +85,10 @@ class Result2 extends ReceiverTypes
         if (!$this->last) {
             return true;
         }
-        if (!$this->isIn6Hours() && $this->countToday() < 2) {
+        if (!$this->isInShortTime && $this->countToday() < 2) {
             return true;
         }
-        if ($this->isIn6Hours() && $this->last['points'] < $this->points) {
+        if ($this->isInShortTime && $this->last['points'] < $this->points) {
             return true;
         }
         return false;
@@ -91,6 +105,9 @@ class Result2 extends ReceiverTypes
 
     protected function isIn6Hours()
     {
+        if (!$this->last) {
+            return false;
+        }
         return time() - $this->last['add_time'] < 6 * 3600;
     }
 
@@ -104,23 +121,20 @@ class Result2 extends ReceiverTypes
             ->row();
     }
 
-    // protected function updateResult()
-    // {
-    //     return $this->db->update('hh_toothbrushing_result')
-    //         ->cols([
-    //             'result' => $this->result,
-    //             'mac' => $this->mac,
-    //             'points' => $this->points,
-    //             'add_time' => $this->time
-    //         ])->where('id=' . $this->last['id'])
-    //         ->query();
-    // }
+    protected function inactiveLast()
+    {
+        return $this->db->update('hh_toothbrushing_result')
+            ->cols([
+                'active' => 0
+            ])->where('id=' . $this->last['id'])
+            ->query();
+    }
 
-    protected function createResult($active)
+    protected function createResult()
     {
         $id = $this->db->insert('hh_toothbrushing_result')
             ->cols([
-                'active' => $active,
+                'active' => $this->active,
                 'result' => $this->result,
                 'mac' => $this->mac,
                 'points' => $this->points,
@@ -128,13 +142,6 @@ class Result2 extends ReceiverTypes
                 'add_time' => $this->time
             ])->query();
         // \dump('active : ' . $active);
-        if ($active === 1 && isset($this->last['id'])) {
-            return $this->db->update('hh_toothbrushing_result')
-                ->cols([
-                    'active' => 0
-                ])->where('id=' . $this->last['id'])
-                ->query();
-        }
         return $id;
     }
 
