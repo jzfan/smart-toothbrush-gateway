@@ -28,7 +28,7 @@ class ClientType extends ReceiverTypes
             ->cols([
                 'version' => $this->formatVersion($data['version']),
                 'model' => $data['model'],
-                'add_time' => time()
+                'update_time' => time()
             ])->where("mac='" . $data['mac'] . "'")->query();
     }
 

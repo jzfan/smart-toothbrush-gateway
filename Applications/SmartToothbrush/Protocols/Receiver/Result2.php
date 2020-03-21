@@ -16,6 +16,7 @@ class Result2 extends ReceiverTypes
     protected $time;
     protected $active;
     protected $isInShortTime;
+    protected $shouldInactiveLast = false;
 
     public function getDecodeRule()
     {
@@ -39,7 +40,7 @@ class Result2 extends ReceiverTypes
 
     public function exists()
     {
-        \usleep(\rand(0, 1000000));
+        \usleep(\rand(0, 2000000));
 
         $last = $this->db->select('add_time')->from('hh_toothbrushing_result')
             ->where("mac='" . $this->mac . "'")
@@ -67,17 +68,12 @@ class Result2 extends ReceiverTypes
             $this->active = $this->shouldBeActive() ? 1 : 0;
             $id = $this->createResult();
 
-            if ($this->shouldInactiveLast()) {
+            if ($this->shouldInactiveLast) {
                 $this->inactiveLast();
             }
 
             $this->push($id);
         }
-    }
-
-    protected function shouldInactiveLast()
-    {
-        return $this->active && !!$this->last && $this->isInShortTime;
     }
 
     protected function shouldBeActive()
@@ -89,6 +85,7 @@ class Result2 extends ReceiverTypes
             return true;
         }
         if ($this->isInShortTime && $this->last['points'] < $this->points) {
+            $this->shouldInactiveLast = true;
             return true;
         }
         return false;
@@ -117,7 +114,7 @@ class Result2 extends ReceiverTypes
         return $this->db->select('*')->from('hh_toothbrushing_result')
             ->where("mac='" . $this->mac . "'")
             ->where("add_time > $today_begin ")
-            ->orderByDesc(['id'])
+            ->orderByDesc(['add_time'])
             ->row();
     }
 
