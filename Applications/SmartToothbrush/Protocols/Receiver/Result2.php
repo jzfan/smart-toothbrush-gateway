@@ -60,9 +60,10 @@ class Result2 extends ReceiverTypes
 
         if ($this->suid) {
             // dump('suid', $this->suid);
+            $this->last = $this->getLastDataToday();
+
             $this->updateOrCreateTotal();
 
-            $this->last = $this->getLastDataToday();
             $this->isInShortTime = $this->isIn6Hours();
 
             $this->active = $this->shouldBeActive() ? 1 : 0;
@@ -159,7 +160,8 @@ class Result2 extends ReceiverTypes
                     'update_time' => $this->time,
                     'mac' => $this->mac,
                     'running_days' => $running_days,
-                    'total_days' => 1
+                    'total_days' => 1,
+                    'last_day' => date('Y-m-d')
                 ])->query();
             return;
         }
@@ -169,15 +171,10 @@ class Result2 extends ReceiverTypes
             'count' => $row['count'] + 1,
             'update_time' => $this->time
         ];
-        if ($this->isToday($this->time)) {
-            $countYesterday = $this->db->select('count(*) as count')
-                ->from('hh_toothbrushing_result')
-                ->where("mac='" . $this->mac . "' and sub_user_id=" . $this->suid . ' and add_time > ' . strtotime('yesterday') . ' and add_time < ' . strtotime('today'))
-                ->single();
-            if ($countYesterday > 0) {
-                $data['running_days'] = $row['running_days'] + 1;
-                $data['total_days'] = $row['total_days'] + 1;
-            }
+
+        if ($this->isToday($this->time) && (!$this->last)) {
+            $data['running_days'] = $row['running_days'] + 1;
+            $data['total_days'] = $row['total_days'] + 1;
         }
 
         $this->db->update('hh_toothbrushing_result_total')
