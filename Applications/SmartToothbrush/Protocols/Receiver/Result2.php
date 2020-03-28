@@ -149,6 +149,7 @@ class Result2 extends ReceiverTypes
             ->where("mac='" . $this->mac . "' and sub_user_id=" . $this->suid)
             ->row();
         if (empty($row)) {
+            $running_days = $this->isToday($this->time) ? 1 : 0;
             $this->db->insert('hh_toothbrushing_result_total')
                 ->cols([
                     'total' => $this->points,
@@ -156,16 +157,31 @@ class Result2 extends ReceiverTypes
                     'sub_user_id' => $this->suid,
                     'add_time' => $this->time,
                     'update_time' => $this->time,
-                    'mac' => $this->mac
+                    'mac' => $this->mac,
+                    'running_days' => $running_days,
+                    'total_days' => 1
                 ])->query();
             return;
         }
+
+        $data = [
+            'total' => $row['total'] + $this->points,
+            'count' => $row['count'] + 1,
+            'update_time' => $this->time
+        ];
+        if ($this->isToday($this->time)) {
+            $countYesterday = $this->db->select('count(*) as count')
+                ->from('hh_toothbrushing_result')
+                ->where("mac='" . $this->mac . "' and sub_user_id=" . $this->suid . ' and add_time > ' . strtotime('yesterday') . ' and add_time < ' . strtotime('today'))
+                ->single();
+            if ($countYesterday > 0) {
+                $data['running_days'] = $row['running_days'] + 1;
+                $data['total_days'] = $row['total_days'] + 1;
+            }
+        }
+
         $this->db->update('hh_toothbrushing_result_total')
-            ->cols([
-                'total' => $row['total'] + $this->points,
-                'count' => $row['count'] + 1,
-                'update_time' => $this->time
-            ])->where("mac='" . $this->mac . "'")
+            ->cols($data)->where("mac='" . $this->mac . "'")
             ->query();
     }
 
@@ -182,5 +198,12 @@ class Result2 extends ReceiverTypes
         }, function ($exception) {
             echo $exception;
         });
+    }
+
+    protected function isToday($time)
+    {
+        $tomorrow = strtotime('tomorrow');
+        $today = strtotime('today');
+        return ($time >= $today) && ($time < $tomorrow);
     }
 }

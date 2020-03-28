@@ -6,7 +6,7 @@ use Protocols\Utils;
 
 class PackageHandlerFactory
 {
-    const RECEIVERS = [
+    static $RECEIVERS = [
         Utils::RESULT => 'Result2',
         Utils::BOOT_DATA => 'Boot',
         Utils::QUERY_DATE => 'QueryDate',
@@ -16,7 +16,7 @@ class PackageHandlerFactory
         Utils::CLIENT_OK => 'OK',
     ];
 
-    const SENDERS = [
+    static $SENDERS = [
         Utils::CONTROL => 'Control',
         Utils::SERVER_OK => 'Ok',
         Utils::SET_DATE => 'SetDate'
@@ -24,17 +24,17 @@ class PackageHandlerFactory
 
     public static function getReceiver($index)
     {
-        // if (!isset(self::RECEIVERS[$index])) {
+        // if (!isset(self::$RECEIVERS[$index])) {
         //     return new \Protocols\Receiver\Fallback;
         // }
-        $class = self::RECEIVERS[$index];
+        $class = self::$RECEIVERS[$index];
         $class = '\\Protocols\\Receiver\\' . $class;
         return new $class;
     }
 
     public static function getSender($index)
     {
-        $class = self::SENDERS[$index];
+        $class = self::$SENDERS[$index];
         $class = '\\Protocols\\Sender\\' . $class;
         return new $class;
     }
@@ -42,11 +42,11 @@ class PackageHandlerFactory
     public static function all($instance = false)
     {
         $arr = [];
-        foreach (self::RECEIVERS as $class) {
+        foreach (self::$RECEIVERS as $class) {
             $class = '\\Protocols\\Receiver\\' . $class;
             $arr[] = new $class;
         }
-        foreach (self::SENDERS as $class) {
+        foreach (self::$SENDERS as $class) {
             $class = '\\Protocols\\Sender\\' . $class;
             $arr[] = new $class;
         }

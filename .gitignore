@@ -1,4 +1,5 @@
 .vscode
 .env
 vendor
+Applications/SmartToothbrush/start_toothbrush_gateway.php
 
