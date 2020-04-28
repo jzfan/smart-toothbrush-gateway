@@ -161,7 +161,6 @@ class Result2 extends ReceiverTypes
                     'mac' => $this->mac,
                     'running_days' => $running_days,
                     'total_days' => 1,
-                    'last_day' => date('Y-m-d')
                 ])->query();
             return;
         }
@@ -173,8 +172,10 @@ class Result2 extends ReceiverTypes
         ];
 
         if ($this->isToday($this->time) && (!$this->last)) {
-            $data['running_days'] = $row['running_days'] + 1;
             $data['total_days'] = $row['total_days'] + 1;
+            if ($this->didYestoday()) {
+                $data['running_days'] = $row['running_days'] + 1;
+            }
         }
 
         $this->db->update('hh_toothbrushing_result_total')
@@ -202,5 +203,19 @@ class Result2 extends ReceiverTypes
         $tomorrow = strtotime('tomorrow');
         $today = strtotime('today');
         return ($time >= $today) && ($time < $tomorrow);
+    }
+
+    protected function didYestoday()
+    {
+        $today_begin = \strtotime(date('Y-m-d', time()));
+        $yestoday_begin = $today_begin - 3600 * 24;
+
+        $count = $this->db->select('count(*) as count')->from('hh_toothbrushing_result')
+            ->where("mac='" . $this->mac . "'")
+            ->where("add_time > $yestoday_begin ")
+            ->where("add_time < $today_begin ")
+            ->single();
+
+        return $count > 0;
     }
 }
