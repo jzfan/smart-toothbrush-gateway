@@ -60,7 +60,7 @@ class Result2 extends ReceiverTypes
 
         if ($this->suid) {
             // dump('suid', $this->suid);
-            $this->last = $this->getLastDataToday();
+            $this->lastOfToday = $this->getLastDataToday();
 
             $this->updateOrCreateTotal();
 
@@ -79,13 +79,13 @@ class Result2 extends ReceiverTypes
 
     protected function shouldBeActive()
     {
-        if (!$this->last) {
+        if (!$this->lastOfToday) {
             return true;
         }
         if (!$this->isInShortTime && $this->countToday() < 2) {
             return true;
         }
-        if ($this->isInShortTime && $this->last['points'] < $this->points) {
+        if ($this->isInShortTime && $this->lastOfToday['points'] < $this->points) {
             $this->shouldInactiveLast = true;
             return true;
         }
@@ -103,10 +103,10 @@ class Result2 extends ReceiverTypes
 
     protected function isIn6Hours()
     {
-        if (!$this->last) {
+        if (!$this->lastOfToday) {
             return false;
         }
-        return time() - $this->last['add_time'] < 6 * 3600;
+        return time() - $this->lastOfToday['add_time'] < 6 * 3600;
     }
 
     protected function getLastDataToday()
@@ -124,7 +124,7 @@ class Result2 extends ReceiverTypes
         return $this->db->update('hh_toothbrushing_result')
             ->cols([
                 'active' => 0
-            ])->where('id=' . $this->last['id'])
+            ])->where('id=' . $this->lastOfToday['id'])
             ->query();
     }
 
@@ -147,10 +147,10 @@ class Result2 extends ReceiverTypes
     {
         $row = $this->db->select('*')
             ->from('hh_toothbrushing_result_total')
-            ->where("mac='" . $this->mac . "' and sub_user_id=" . $this->suid)
+            // ->where("mac='" . $this->mac . "' and sub_user_id=" . $this->suid)
+            ->where("sub_user_id=" . $this->suid)
             ->row();
         if (empty($row)) {
-            $running_days = $this->isToday($this->time) ? 1 : 0;
             $this->db->insert('hh_toothbrushing_result_total')
                 ->cols([
                     'total' => $this->points,
@@ -158,8 +158,8 @@ class Result2 extends ReceiverTypes
                     'sub_user_id' => $this->suid,
                     'add_time' => $this->time,
                     'update_time' => $this->time,
-                    'mac' => $this->mac,
-                    'running_days' => $running_days,
+                    // 'mac' => $this->mac,
+                    'running_days' => 1,
                     'total_days' => 1,
                 ])->query();
             return;
@@ -171,15 +171,15 @@ class Result2 extends ReceiverTypes
             'update_time' => $this->time
         ];
 
-        if ($this->isToday($this->time) && (!$this->last)) {
+        if ($this->isToday($this->time) && (!$this->lastOfToday)) {
             $data['total_days'] = $row['total_days'] + 1;
-            if ($this->didYestoday()) {
-                $data['running_days'] = $row['running_days'] + 1;
-            }
+            $data['running_days'] = $this->didYestoday() ? $row['running_days'] + 1 : 1;
         }
 
         $this->db->update('hh_toothbrushing_result_total')
-            ->cols($data)->where("mac='" . $this->mac . "'")
+            ->cols($data)
+            ->where("sub_user_id=" . $this->suid)
+            // ->where("mac='" . $this->mac . "'")
             ->query();
     }
 
@@ -210,7 +210,8 @@ class Result2 extends ReceiverTypes
         $today_begin = \strtotime(date('Y-m-d', time()));
         $yestoday_begin = $today_begin - 3600 * 24;
 
-        $count = $this->db->select('count(*) as count')->from('hh_toothbrushing_result')
+        $count = $this->db->select('count(*) as count')
+            ->from('hh_toothbrushing_result')
             ->where("mac='" . $this->mac . "'")
             ->where("add_time > $yestoday_begin ")
             ->where("add_time < $today_begin ")
