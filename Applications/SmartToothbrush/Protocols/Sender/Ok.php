@@ -5,7 +5,7 @@ namespace Protocols\Sender;
 use Protocols\Utils;
 use GatewayWorker\Lib\Gateway;
 
-class Ok extends SenderTypes
+class OK extends SenderTypes
 {
     public function send($mac, $cmd)
     {

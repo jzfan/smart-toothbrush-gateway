@@ -158,7 +158,7 @@ class Result2 extends ReceiverTypes
                     'sub_user_id' => $this->suid,
                     'add_time' => $this->time,
                     'update_time' => $this->time,
-                    // 'mac' => $this->mac,
+                    'mac' => "'" . $this->mac . "'",
                     'running_days' => 1,
                     'total_days' => 1,
                 ])->query();
@@ -179,7 +179,6 @@ class Result2 extends ReceiverTypes
         $this->db->update('hh_toothbrushing_result_total')
             ->cols($data)
             ->where("sub_user_id=" . $this->suid)
-            // ->where("mac='" . $this->mac . "'")
             ->query();
     }
 
