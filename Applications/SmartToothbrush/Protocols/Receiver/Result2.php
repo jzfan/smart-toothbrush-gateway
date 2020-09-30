@@ -7,14 +7,14 @@ use Services\ToothbrushingService;
 
 class Result2 extends ReceiverTypes
 {
-    protected $last;
     protected $points;
     protected $db;
     protected $mac;
     protected $suid;
     protected $result;
     protected $time;
-    protected $active;
+    protected $lastActive;
+    protected $activeTodayCount;
     protected $isInShortTime;
     protected $shouldInactiveLast = false;
 
@@ -36,6 +36,8 @@ class Result2 extends ReceiverTypes
             ->where("mac='" . $data["mac"] . "'")
             ->orderByDESC(['id'])
             ->single();
+
+        $this->activeTodayCount = $this->countActiveToday();
     }
 
     public function exists()
@@ -54,45 +56,51 @@ class Result2 extends ReceiverTypes
     {
         $this->initData($data, $db);
 
-        if ($this->exists()) {
+        if ($this->exists() || !$this->suid) {
             return false;
         }
 
-        if ($this->suid) {
-            // dump('suid', $this->suid);
-            $this->lastOfToday = $this->getLastDataToday();
-
+        if (0 == $this->activeTodayCount) {
+            $this->createResult(1);
             $this->updateOrCreateTotal();
+            return;
+        }
 
-            $this->isInShortTime = $this->isIn6Hours();
+        $this->lastActive = $this->getLastActiveToday();
 
-            $this->active = $this->shouldBeActive() ? 1 : 0;
-            $id = $this->createResult();
-
-            if ($this->shouldInactiveLast) {
+        if (1 == $this->activeTodayCount) {
+            if ($this->isInOneHour() && $this->isPointsGreater()) {
                 $this->inactiveLast();
+                $this->createResult(1);
+
+                $this->updateTotal($this->points);
+                return;
             }
-
-            $this->push($id);
+            if (!$this->isIn6Hours() && $this->isToday()) {
+                $this->createResult(1);
+                $this->updateTotal($this->points);
+                return;
+            }
         }
+
+        if (2 == $this->activeTodayCount && $this->isPointsGreater()) {
+            $this->inactiveLast();
+            $this->createResult(1);
+
+            $diff = \bcsub($this->points, $this->lastActive['points'], 2);
+            $this->updateTotal($diff);
+            return;
+        }
+
+        $this->createResult(0);
     }
 
-    protected function shouldBeActive()
+    protected function isPointsGreater()
     {
-        if (!$this->lastOfToday) {
-            return true;
-        }
-        if (!$this->isInShortTime && $this->countToday() < 2) {
-            return true;
-        }
-        if ($this->isInShortTime && $this->lastOfToday['points'] < $this->points) {
-            $this->shouldInactiveLast = true;
-            return true;
-        }
-        return false;
+        return $this->points > $this->lastActive['points'];
     }
 
-    protected function countToday()
+    protected function countActiveToday()
     {
         $today_begin = mktime(0, 0, 0, date('m'), date('d'), date('Y'));
         return $this->db->select('count(*) as count')->from('hh_toothbrushing_result')
@@ -103,18 +111,21 @@ class Result2 extends ReceiverTypes
 
     protected function isIn6Hours()
     {
-        if (!$this->lastOfToday) {
-            return false;
-        }
-        return time() - $this->lastOfToday['add_time'] < 6 * 3600;
+        return time() - $this->lastActive['add_time'] < 6 * 3600;
     }
 
-    protected function getLastDataToday()
+    protected function isInOneHour()
+    {
+        return time() - $this->lastActive['add_time'] < 1 * 3600;
+    }
+
+    protected function getLastActiveToday()
     {
         $today_begin = mktime(0, 0, 0, date('m'), date('d'), date('Y'));
         return $this->db->select('*')->from('hh_toothbrushing_result')
             ->where("mac='" . $this->mac . "'")
             ->where("add_time > $today_begin ")
+            ->where("active = 1 ")
             ->orderByDesc(['add_time'])
             ->row();
     }
@@ -124,15 +135,15 @@ class Result2 extends ReceiverTypes
         return $this->db->update('hh_toothbrushing_result')
             ->cols([
                 'active' => 0
-            ])->where('id=' . $this->lastOfToday['id'])
+            ])->where('id=' . $this->lastActive['id'])
             ->query();
     }
 
-    protected function createResult()
+    protected function createResult($active)
     {
         $id = $this->db->insert('hh_toothbrushing_result')
             ->cols([
-                'active' => $this->active,
+                'active' => $active,
                 'result' => $this->result,
                 'mac' => $this->mac,
                 'points' => $this->points,
@@ -140,16 +151,15 @@ class Result2 extends ReceiverTypes
                 'add_time' => $this->time
             ])->query();
         // \dump('active : ' . $active);
-        return $id;
+        if (1 == $active) {
+            $this->push($id);
+        }
     }
 
     protected function updateOrCreateTotal()
     {
-        $row = $this->db->select('*')
-            ->from('hh_toothbrushing_result_total')
-            // ->where("mac='" . $this->mac . "' and sub_user_id=" . $this->suid)
-            ->where("sub_user_id=" . $this->suid)
-            ->row();
+        $row = $this->getTotalRow();
+
         if (empty($row)) {
             $this->db->insert('hh_toothbrushing_result_total')
                 ->cols([
@@ -162,24 +172,9 @@ class Result2 extends ReceiverTypes
                     'running_days' => 1,
                     'total_days' => 1,
                 ])->query();
-            return;
+        } else {
+            $this->updateTotal($this->points, $row);
         }
-
-        $data = [
-            'total' => $row['total'] + $this->points,
-            'count' => $row['count'] + 1,
-            'update_time' => $this->time
-        ];
-
-        if ($this->isToday($this->time) && (!$this->lastOfToday)) {
-            $data['total_days'] = $row['total_days'] + 1;
-            $data['running_days'] = $this->didYestoday() ? $row['running_days'] + 1 : 1;
-        }
-
-        $this->db->update('hh_toothbrushing_result_total')
-            ->cols($data)
-            ->where("sub_user_id=" . $this->suid)
-            ->query();
     }
 
     protected function push($id)
@@ -190,18 +185,18 @@ class Result2 extends ReceiverTypes
             'mac' => $this->mac,
             'points' => $this->points
         ], function ($response) {
-            var_dump($response->getStatusCode());
+            // var_dump($response->getStatusCode());
             echo $response->getBody();
         }, function ($exception) {
             echo $exception;
         });
     }
 
-    protected function isToday($time)
+    protected function isToday()
     {
         $tomorrow = strtotime('tomorrow');
         $today = strtotime('today');
-        return ($time >= $today) && ($time < $tomorrow);
+        return ($this->time >= $today) && ($this->time < $tomorrow);
     }
 
     protected function didYestoday()
@@ -217,5 +212,42 @@ class Result2 extends ReceiverTypes
             ->single();
 
         return $count > 0;
+    }
+
+    protected function updateTotal($incr, $row = null)
+    {
+        if (!$row) {
+            $row = $this->getTotalRow();
+        }
+
+        $data = [
+            'total' => bcadd($row['total'], $incr, 2),
+            'count' => $row['count'] + 1,
+            'update_time' => $this->time
+        ];
+
+        if ($this->isFirstActiveToday()) {
+            $data['total_days'] = $row['total_days'] + 1;
+            $data['running_days'] = $this->didYestoday() ? $row['running_days'] + 1 : 1;
+        }
+
+        $this->db->update('hh_toothbrushing_result_total')
+            ->cols($data)
+            ->where("sub_user_id=" . $this->suid)
+            ->query();
+    }
+
+    protected function isFirstActiveToday()
+    {
+        return $this->isToday() && (!$this->lastActive);
+    }
+
+    protected function getTotalRow()
+    {
+        return $this->db->select('*')
+            ->from('hh_toothbrushing_result_total')
+            // ->where("mac='" . $this->mac . "' and sub_user_id=" . $this->suid)
+            ->where("sub_user_id=" . $this->suid)
+            ->row();
     }
 }
