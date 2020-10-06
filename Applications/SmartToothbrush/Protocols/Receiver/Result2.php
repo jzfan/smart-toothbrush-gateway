@@ -14,9 +14,7 @@ class Result2 extends ReceiverTypes
     protected $result;
     protected $time;
     protected $lastActive;
-    protected $activeTodayCount;
-    protected $isInShortTime;
-    protected $shouldInactiveLast = false;
+    protected $firstTimeToday;
 
     public function getDecodeRule()
     {
@@ -36,8 +34,6 @@ class Result2 extends ReceiverTypes
             ->where("mac='" . $data["mac"] . "'")
             ->orderByDESC(['id'])
             ->single();
-
-        $this->activeTodayCount = $this->countActiveToday();
     }
 
     public function exists()
@@ -60,39 +56,49 @@ class Result2 extends ReceiverTypes
             return false;
         }
 
-        if (0 == $this->activeTodayCount) {
+        if (!$this->isToday()) {
+            $this->createResult(0);
+            return;
+        }
+
+        $countActiveToday = $this->countActiveToday();
+
+        if (0 == $countActiveToday) {
             $this->createResult(1);
             $this->updateOrCreateTotal();
             return;
         }
 
         $this->lastActive = $this->getLastActiveToday();
+        $this->firstTimeToday = $this->getFirstTimeToday();
 
-        if (1 == $this->activeTodayCount) {
+        if (1 == $countActiveToday) {
             if ($this->isInOneHour() && $this->isPointsGreater()) {
-                $this->inactiveLast();
-                $this->createResult(1);
-
-                $this->updateTotal($this->points);
+                $this->toggleActive();
                 return;
             }
-            if (!$this->isIn6Hours() && $this->isToday()) {
+            if (!$this->isIn6Hours()) {
                 $this->createResult(1);
                 $this->updateTotal($this->points);
                 return;
             }
         }
 
-        if (2 == $this->activeTodayCount && $this->isPointsGreater()) {
-            $this->inactiveLast();
-            $this->createResult(1);
-
-            $diff = \bcsub($this->points, $this->lastActive['points'], 2);
-            $this->updateTotal($diff);
+        if (2 == $countActiveToday && $this->isPointsGreater()) {
+            $this->toggleActive();
             return;
         }
 
         $this->createResult(0);
+    }
+
+    protected function toggleActive()
+    {
+        $this->inactiveLast();
+        $this->createResult(1);
+
+        $diff = \bcsub($this->points, $this->lastActive['points'], 2);
+        $this->updateTotal($diff);
     }
 
     protected function isPointsGreater()
@@ -106,28 +112,41 @@ class Result2 extends ReceiverTypes
         return $this->db->select('count(*) as count')->from('hh_toothbrushing_result')
             ->where("add_time > $today_begin ")
             ->where("mac='" . $this->mac . "'")
+            ->where("active=1")
             ->single();
     }
 
     protected function isIn6Hours()
     {
-        return time() - $this->lastActive['add_time'] < 6 * 3600;
+        return $this->time - $this->firstTimeToday < 6 * 3600;
     }
 
     protected function isInOneHour()
     {
-        return time() - $this->lastActive['add_time'] < 1 * 3600;
+        return $this->time - $this->firstTimeToday < 1 * 3600;
     }
 
     protected function getLastActiveToday()
     {
         $today_begin = mktime(0, 0, 0, date('m'), date('d'), date('Y'));
-        return $this->db->select('*')->from('hh_toothbrushing_result')
+        return $this->db->select('*')
+            ->from('hh_toothbrushing_result')
             ->where("mac='" . $this->mac . "'")
             ->where("add_time > $today_begin ")
             ->where("active = 1 ")
             ->orderByDesc(['add_time'])
             ->row();
+    }
+
+    protected function getFirstTimeToday()
+    {
+        $today_begin = mktime(0, 0, 0, date('m'), date('d'), date('Y'));
+        return $this->db->select('add_time')
+            ->from('hh_toothbrushing_result')
+            ->where("mac='" . $this->mac . "'")
+            ->where("add_time > $today_begin ")
+            ->orderByASC(['add_time'])
+            ->single();
     }
 
     protected function inactiveLast()
